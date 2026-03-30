@@ -1,0 +1,29 @@
+@import 'tailwindcss';
+
+:root {
+  --font-family: 'Roboto', sans-serif;
+  --black: #1f2939;
+  --gray: #697180;
+  --gray-hover: #f2f5f8;
+  --gray-light: #f0f3f7;
+  --gray-light-hover: #f7f8f9;
+  --border: #e0e5eb;
+  --pink-light: #fee3e3;
+  --pink-hover: #fed7d7;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--black);
+  font-weight: 400;
+  line-height: 143%;
+  font-size: 14px;
+}
+
+tr td > .deleteButton {
+  display: none;
+}
+
+tr:hover td > .deleteButton {
+  display: block;
+}

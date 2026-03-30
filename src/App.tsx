@@ -4,7 +4,6 @@ import { useStore } from './store/MetersStore';
 import { observer } from 'mobx-react-lite';
 
 const App = observer(() => {
-
   const rootStore = useStore();
 
   useEffect(() => {

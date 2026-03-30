@@ -119,7 +119,7 @@ const RootStore = types
       try {
         // ! ИЗ-ЗА CORS НЕ ПОЛУЧИЛОСЬ ОТПРАВИТЬ ЗАПРОС
         // ! СДЕЛАЛ ТОЛЬКО ИЗМЕНЕНИЯ НА КЛИЕНТЕ
-        
+
         // const response = yield fetch(
         //   `http://showroom.eis24.me/c300/api/v4/test/meters/${meterId}`,
         //   {
@@ -175,7 +175,7 @@ const RootStore = types
           : 'Загрузка...';
         return {
           ...meter,
-          index: self.limit * (self.currentPage -1 ) + index + 1,
+          index: self.limit * (self.currentPage - 1) + index + 1,
           meterType,
           installationDate,
           isAutomatic,

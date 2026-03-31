@@ -54,21 +54,22 @@ const RootStore = types
     },
 
     fetchAreas: flow(function* (areasIds: string[]) {
-
       const searchParams = new URLSearchParams();
-      areasIds.forEach(id => searchParams.append("id__in", id));
+      areasIds.forEach((id) => searchParams.append('id__in', id));
 
       try {
-        const response: Response = yield fetch(`https://showroom.eis24.me/c300/api/v4/test/areas/?${searchParams}`);
+        const response: Response = yield fetch(
+          `https://showroom.eis24.me/c300/api/v4/test/areas/?${searchParams}`
+        );
 
-        if(!response.ok) throw new Error("Адреса не найдены");
+        if (!response.ok) throw new Error('Адреса не найдены');
 
         const data: IAreaData = yield response.json();
 
-        if(data.results) {
-          data.results.forEach(area => {
+        if (data.results) {
+          data.results.forEach((area) => {
             self.areas.put(area);
-          })
+          });
         }
       } catch (error) {
         const errMsg =
@@ -96,12 +97,12 @@ const RootStore = types
         self.totalPages = Math.ceil(self.totalCount / self.limit);
 
         const unknownAreaIds = self.meters
-          .filter(m => !self.areas.has(m.area.id))
-          .map(m => m.area.id);
+          .filter((m) => !self.areas.has(m.area.id))
+          .map((m) => m.area.id);
 
         const uniqueIds = Array.from(new Set([...unknownAreaIds]));
 
-        if(uniqueIds.length > 0) {
+        if (uniqueIds.length > 0) {
           yield self.fetchAreas(uniqueIds);
         }
       } catch (error) {
@@ -138,21 +139,19 @@ const RootStore = types
           `https://showroom.eis24.me/c300/api/v4/test/meters/?limit=${needed}&offset=${nextItemOffset}`
         );
 
-        if (!response.ok) throw new Error("Счетчик не найден");
+        if (!response.ok) throw new Error('Счетчик не найден');
 
         const data: IMeterData = yield response.json();
-        data.results.forEach(m => self.meters.push(m));
-
+        data.results.forEach((m) => self.meters.push(m));
 
         const newUnknownAreaIds = self.meters
-          .filter(m => !self.areas.has(m.area.id))
-          .map(m => m.area.id);
+          .filter((m) => !self.areas.has(m.area.id))
+          .map((m) => m.area.id);
 
-        const newUniqueIds = Array.from(new Set([...newUnknownAreaIds]))
-        if(newUniqueIds.length > 0) {
+        const newUniqueIds = Array.from(new Set([...newUnknownAreaIds]));
+        if (newUniqueIds.length > 0) {
           yield self.fetchAreas(Array.from(newUniqueIds));
         }
-        
       } catch (error) {
         const errMsg =
           error instanceof Error ? error.message : 'Неизвестная ошибка';

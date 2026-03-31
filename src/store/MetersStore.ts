@@ -53,33 +53,23 @@ const RootStore = types
       self.error = error;
     },
 
-    fetchAreas: flow(function* () {
-      const unknownAreaIds = self.meters
-        .filter((m) => !self.areas.has(m.area.id))
-        .map((m) => m.area.id);
+    fetchAreas: flow(function* (areasIds: string[]) {
 
-      const uniqueIds = [...new Set(unknownAreaIds)];
-
-      if (uniqueIds.length === 0) return;
+      const searchParams = new URLSearchParams();
+      areasIds.forEach(id => searchParams.append("id__in", id));
 
       try {
-        const promises: Promise<IAreaData>[] = uniqueIds.map((id) =>
-          fetch(
-            `https://showroom.eis24.me/c300/api/v4/test/areas/?id=${id}`
-          ).then((data) => data.json())
-        );
+        const response: Response = yield fetch(`https://showroom.eis24.me/c300/api/v4/test/areas/?${searchParams}`);
 
-        const response: PromiseSettledResult<IAreaData>[] =
-          yield Promise.allSettled(promises);
+        if(!response.ok) throw new Error("Адреса не найдены");
 
-        response.forEach((res) => {
-          if (res.status === 'fulfilled') {
-            const area = res.value.results[0];
+        const data: IAreaData = yield response.json();
+
+        if(data.results) {
+          data.results.forEach(area => {
             self.areas.put(area);
-          } else {
-            throw new Error(`Ошибка: ${res.reason}`);
-          }
-        });
+          })
+        }
       } catch (error) {
         const errMsg =
           error instanceof Error ? error.message : 'Неизвестная ошибка';
@@ -105,7 +95,15 @@ const RootStore = types
         self.totalCount = data.count;
         self.totalPages = Math.ceil(self.totalCount / self.limit);
 
-        yield self.fetchAreas();
+        const unknownAreaIds = self.meters
+          .filter(m => !self.areas.has(m.area.id))
+          .map(m => m.area.id);
+
+        const uniqueIds = Array.from(new Set([...unknownAreaIds]));
+
+        if(uniqueIds.length > 0) {
+          yield self.fetchAreas(uniqueIds);
+        }
       } catch (error) {
         const errMsg =
           error instanceof Error ? error.message : 'Неизвестная ошибка';
@@ -134,19 +132,27 @@ const RootStore = types
         const filteredMeters = self.meters.filter((m) => m.id !== meterId);
         self.meters.replace(filteredMeters);
 
-        const nextItemOffset = self.offset + self.limit + 1;
-        const refillResponse = yield fetch(
-          `https://showroom.eis24.me/c300/api/v4/test/meters/?limit=1&offset=${nextItemOffset}`
+        const needed = self.limit - self.meters.length;
+        const nextItemOffset = self.currentPage + self.limit + 1;
+        const response: Response = yield fetch(
+          `https://showroom.eis24.me/c300/api/v4/test/meters/?limit=${needed}&offset=${nextItemOffset}`
         );
 
-        if (refillResponse.ok) {
-          const data = yield refillResponse.json();
-          self.meters.push(data.results[0]);
+        if (!response.ok) throw new Error("Счетчик не найден");
 
-          yield self.fetchAreas();
+        const data: IMeterData = yield response.json();
+        data.results.forEach(m => self.meters.push(m));
+
+
+        const newUnknownAreaIds = self.meters
+          .filter(m => !self.areas.has(m.area.id))
+          .map(m => m.area.id);
+
+        const newUniqueIds = Array.from(new Set([...newUnknownAreaIds]))
+        if(newUniqueIds.length > 0) {
+          yield self.fetchAreas(Array.from(newUniqueIds));
         }
-
-        console.log(self.meters);
+        
       } catch (error) {
         const errMsg =
           error instanceof Error ? error.message : 'Неизвестная ошибка';
